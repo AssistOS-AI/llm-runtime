@@ -1,0 +1,30 @@
+{
+    "id": "base-local",
+    "description": "General-purpose local LLM agent. Hardware-aware container, agent-owned model profiles, MCP runtime on port 9000.",
+    "container": "${PLOINKY_BASE_LOCAL_IMAGE}",
+    "workdir": "/code",
+    "llmRuntime": {
+        "enabled": true
+    },
+    "env": [
+        { "name": "HF_TOKEN", "required": false },
+        { "name": "PLOINKY_LLM_ARCHITECTURES_PATH", "required": false }
+    ],
+    "profiles": {
+        "default": {
+            "ports": ["127.0.0.1:0:9000", "127.0.0.1:0:8080"]
+        }
+    },
+    "readiness": {
+        "protocol": "mcp"
+    },
+    "endpoints": {
+        "agent-card": {
+            "tags": ["llm", "local", "chat"]
+        },
+        "agentCard": {
+            "tags": ["llm", "local", "chat"]
+        }
+    },
+    "start": "sh /Agent/llm-runtime/runtime-agent/start-runtime-agent.sh"
+}

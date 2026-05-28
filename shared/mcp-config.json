@@ -1,0 +1,180 @@
+{
+  "tools": [
+    {
+      "name": "runtime.describe",
+      "title": "Describe Runtime",
+      "description": "Return selected architecture, policy, hardware, launchers, and profile metadata for this local runtime.",
+      "command": "node",
+      "args": ["/Agent/llm-runtime/runtime-agent/tools/runtime-tool.mjs"],
+      "cwd": "/code",
+      "timeoutMs": 30000,
+      "inputSchema": {},
+      "env": { "TOOL_NAME": "runtime.describe" }
+    },
+    {
+      "name": "runtime.health",
+      "title": "Runtime Health",
+      "description": "Check the local runtime control service and launcher registry.",
+      "command": "node",
+      "args": ["/Agent/llm-runtime/runtime-agent/tools/runtime-tool.mjs"],
+      "cwd": "/code",
+      "timeoutMs": 15000,
+      "inputSchema": {},
+      "env": { "TOOL_NAME": "runtime.health" }
+    },
+    {
+      "name": "runtime.logs",
+      "title": "Runtime Logs",
+      "description": "Return redacted logs for the active local runtime instance.",
+      "command": "node",
+      "args": ["/Agent/llm-runtime/runtime-agent/tools/runtime-tool.mjs"],
+      "cwd": "/code",
+      "timeoutMs": 15000,
+      "inputSchema": {},
+      "env": { "TOOL_NAME": "runtime.logs" }
+    },
+    {
+      "name": "modelProfiles.list",
+      "title": "List Model Profiles",
+      "description": "List agent-owned local model profiles.",
+      "command": "node",
+      "args": ["/Agent/llm-runtime/runtime-agent/tools/runtime-tool.mjs"],
+      "cwd": "/code",
+      "timeoutMs": 15000,
+      "inputSchema": {},
+      "env": { "TOOL_NAME": "modelProfiles.list" }
+    },
+    {
+      "name": "modelProfiles.describe",
+      "title": "Describe Model Profile",
+      "description": "Describe one agent-owned model profile and its candidate launchers.",
+      "command": "node",
+      "args": ["/Agent/llm-runtime/runtime-agent/tools/runtime-tool.mjs"],
+      "cwd": "/code",
+      "timeoutMs": 15000,
+      "inputSchema": {
+        "profileId": { "type": "string", "optional": false }
+      },
+      "env": { "TOOL_NAME": "modelProfiles.describe" }
+    },
+    {
+      "name": "modelProfiles.setPriorities",
+      "title": "Set Model Profile Priorities",
+      "description": "Temporarily reorder declared launcher priorities for a model profile.",
+      "command": "node",
+      "args": ["/Agent/llm-runtime/runtime-agent/tools/runtime-tool.mjs"],
+      "cwd": "/code",
+      "timeoutMs": 15000,
+      "inputSchema": {
+        "profileId": { "type": "string", "optional": true },
+        "priorities": { "type": "array", "optional": true, "items": { "type": "object", "additionalProperties": true } },
+        "overrides": { "type": "array", "optional": true, "items": { "type": "object", "additionalProperties": true } }
+      },
+      "env": { "TOOL_NAME": "modelProfiles.setPriorities" }
+    },
+    {
+      "name": "modelProfiles.resetPriorities",
+      "title": "Reset Model Profile Priorities",
+      "description": "Clear local priority overrides and return to agent defaults.",
+      "command": "node",
+      "args": ["/Agent/llm-runtime/runtime-agent/tools/runtime-tool.mjs"],
+      "cwd": "/code",
+      "timeoutMs": 15000,
+      "inputSchema": {},
+      "env": { "TOOL_NAME": "modelProfiles.resetPriorities" }
+    },
+    {
+      "name": "launchers.list",
+      "title": "List Launchers",
+      "description": "List launchers available in this local runtime container.",
+      "command": "node",
+      "args": ["/Agent/llm-runtime/runtime-agent/tools/runtime-tool.mjs"],
+      "cwd": "/code",
+      "timeoutMs": 15000,
+      "inputSchema": {},
+      "env": { "TOOL_NAME": "launchers.list" }
+    },
+    {
+      "name": "launchers.describe",
+      "title": "Describe Launcher",
+      "description": "Describe a launcher and its supported parameters.",
+      "command": "node",
+      "args": ["/Agent/llm-runtime/runtime-agent/tools/runtime-tool.mjs"],
+      "cwd": "/code",
+      "timeoutMs": 15000,
+      "inputSchema": {
+        "launcherId": { "type": "string", "optional": false }
+      },
+      "env": { "TOOL_NAME": "launchers.describe" }
+    },
+    {
+      "name": "launchers.prepare",
+      "title": "Prepare Launcher",
+      "description": "Ask a launcher to download or prepare model artifacts without starting the engine.",
+      "command": "node",
+      "args": ["/Agent/llm-runtime/runtime-agent/tools/runtime-tool.mjs"],
+      "cwd": "/code",
+      "timeoutMs": 120000,
+      "inputSchema": {
+        "launcherId": { "type": "string", "optional": false },
+        "instanceId": { "type": "string", "optional": true },
+        "parameters": { "type": "object", "optional": true, "additionalProperties": true }
+      },
+      "env": { "TOOL_NAME": "launchers.prepare" }
+    },
+    {
+      "name": "launchers.start",
+      "title": "Start Launcher",
+      "description": "Start or reuse the selected local model launcher.",
+      "command": "node",
+      "args": ["/Agent/llm-runtime/runtime-agent/tools/runtime-tool.mjs"],
+      "cwd": "/code",
+      "timeoutMs": 120000,
+      "inputSchema": {
+        "launcherId": { "type": "string", "optional": false },
+        "instanceId": { "type": "string", "optional": true },
+        "parameters": { "type": "object", "optional": true, "additionalProperties": true }
+      },
+      "env": { "TOOL_NAME": "launchers.start" }
+    },
+    {
+      "name": "instance.status",
+      "title": "Instance Status",
+      "description": "Return status for a local runtime instance.",
+      "command": "node",
+      "args": ["/Agent/llm-runtime/runtime-agent/tools/runtime-tool.mjs"],
+      "cwd": "/code",
+      "timeoutMs": 15000,
+      "inputSchema": {
+        "instanceId": { "type": "string", "optional": false }
+      },
+      "env": { "TOOL_NAME": "instance.status" }
+    },
+    {
+      "name": "instance.stop",
+      "title": "Stop Instance",
+      "description": "Stop a local runtime instance.",
+      "command": "node",
+      "args": ["/Agent/llm-runtime/runtime-agent/tools/runtime-tool.mjs"],
+      "cwd": "/code",
+      "timeoutMs": 30000,
+      "inputSchema": {
+        "instanceId": { "type": "string", "optional": false }
+      },
+      "env": { "TOOL_NAME": "instance.stop" }
+    },
+    {
+      "name": "instance.logs",
+      "title": "Instance Logs",
+      "description": "Return redacted logs for a local runtime instance.",
+      "command": "node",
+      "args": ["/Agent/llm-runtime/runtime-agent/tools/runtime-tool.mjs"],
+      "cwd": "/code",
+      "timeoutMs": 15000,
+      "inputSchema": {
+        "instanceId": { "type": "string", "optional": false }
+      },
+      "env": { "TOOL_NAME": "instance.logs" }
+    }
+  ]
+}

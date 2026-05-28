@@ -1,0 +1,29 @@
+{
+    "id": "relevance",
+    "description": "Local relevance/reranker MCP agent. No engine port required; exposes scoring through MCP tools.",
+    "container": "${PLOINKY_RELEVANCE_IMAGE}",
+    "workdir": "/code",
+    "llmRuntime": {
+        "enabled": true
+    },
+    "env": [
+        { "name": "HF_TOKEN", "required": false }
+    ],
+    "profiles": {
+        "default": {
+            "ports": ["127.0.0.1:0:9000"]
+        }
+    },
+    "readiness": {
+        "protocol": "mcp"
+    },
+    "endpoints": {
+        "agent-card": {
+            "tags": ["llm", "local", "rerank"]
+        },
+        "agentCard": {
+            "tags": ["llm", "local", "rerank"]
+        }
+    },
+    "start": "sh /Agent/llm-runtime/runtime-agent/start-runtime-agent.sh"
+}

@@ -1,0 +1,12 @@
+{
+    "schemaVersion": 1,
+    "profiles": [
+        {
+            "id": "primary",
+            "description": "Default classifier profile.",
+            "candidates": [
+                { "launcher": "fake-cpu", "priority": 100, "requiredAccelerators": ["cpu"] }
+            ]
+        }
+    ]
+}

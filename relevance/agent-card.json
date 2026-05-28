@@ -1,0 +1,6 @@
+{
+    "id": "relevance",
+    "tags": ["llm", "local", "rerank"],
+    "summary": "Local rerank/relevance scoring. Exposes scoring via MCP tools; no chat completions surface.",
+    "usage": "Call the rerank MCP tool via the runtime MCP endpoint; this agent does not publish /v1/chat/completions."
+}

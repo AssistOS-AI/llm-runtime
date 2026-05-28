@@ -1,0 +1,9 @@
+{
+    "id": "base-local",
+    "tags": ["llm", "local", "chat"],
+    "summary": "Local CPU/GPU-friendly chat LLM agent. Selects a model launcher based on agent-owned profiles and the host hardware.",
+    "usage": "Call /v1/chat/completions/<agent> via the router. The runtime selects a launcher locally and proxies to the underlying engine on container port 8080.",
+    "inputConventions": {
+        "messages": "OpenAI-style chat messages array"
+    }
+}

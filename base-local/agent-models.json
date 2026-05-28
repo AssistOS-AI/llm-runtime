@@ -1,0 +1,12 @@
+{
+    "schemaVersion": 1,
+    "profiles": [
+        {
+            "id": "primary",
+            "description": "Primary chat profile. Tries GPU launchers first, falls back to CPU.",
+            "candidates": [
+                { "launcher": "fake-cpu", "priority": 100, "requiredAccelerators": ["cpu"] }
+            ]
+        }
+    ]
+}

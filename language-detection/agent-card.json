@@ -1,0 +1,6 @@
+{
+    "id": "language-detection",
+    "tags": ["llm", "local", "classifier"],
+    "summary": "Local language classifier. Exposes a classify MCP tool; no chat completions surface.",
+    "usage": "Call the classify MCP tool via the runtime MCP endpoint. The agent does not start an OpenAI-style engine server."
+}

@@ -1,0 +1,19 @@
+{
+    "schemaVersion": 1,
+    "profiles": [
+        {
+            "id": "primary",
+            "description": "Default planning profile.",
+            "candidates": [
+                { "launcher": "fake-cpu", "priority": 100, "requiredAccelerators": ["cpu"] }
+            ]
+        },
+        {
+            "id": "long-context",
+            "description": "Long-context planning profile.",
+            "candidates": [
+                { "launcher": "fake-cpu", "priority": 100, "requiredAccelerators": ["cpu"] }
+            ]
+        }
+    ]
+}

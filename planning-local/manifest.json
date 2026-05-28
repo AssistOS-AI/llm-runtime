@@ -1,0 +1,29 @@
+{
+    "id": "planning-local",
+    "description": "Local planning/spec LLM agent. Hardware-aware container, agent-owned planning profile.",
+    "container": "${PLOINKY_PLANNING_LOCAL_IMAGE}",
+    "workdir": "/code",
+    "llmRuntime": {
+        "enabled": true
+    },
+    "env": [
+        { "name": "HF_TOKEN", "required": false }
+    ],
+    "profiles": {
+        "default": {
+            "ports": ["127.0.0.1:0:9000", "127.0.0.1:0:8080"]
+        }
+    },
+    "readiness": {
+        "protocol": "mcp"
+    },
+    "endpoints": {
+        "agent-card": {
+            "tags": ["llm", "local", "planning"]
+        },
+        "agentCard": {
+            "tags": ["llm", "local", "planning"]
+        }
+    },
+    "start": "sh /Agent/llm-runtime/runtime-agent/start-runtime-agent.sh"
+}

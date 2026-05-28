@@ -1,0 +1,41 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://ploinky.local/llm-runtime/agent-models.schema.json",
+    "title": "Agent-owned model profile catalog",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["schemaVersion", "profiles"],
+    "properties": {
+        "schemaVersion": { "type": "integer", "const": 1 },
+        "profiles": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "candidates"],
+                "properties": {
+                    "id": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9_-]{0,63}$" },
+                    "description": { "type": "string", "maxLength": 256 },
+                    "candidates": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": ["launcher"],
+                            "properties": {
+                                "launcher": { "type": "string", "pattern": "^[a-zA-Z0-9._-]+$" },
+                                "priority": { "type": "integer", "minimum": 0, "maximum": 1000 },
+                                "requiredAccelerators": {
+                                    "type": "array",
+                                    "items": { "enum": ["cpu", "nvidia-cuda", "amd-rocm", "vulkan", "intel-openvino"] }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
