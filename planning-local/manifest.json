@@ -25,5 +25,5 @@
             "tags": ["llm", "local", "planning"]
         }
     },
-    "start": "sh /Agent/llm-runtime/runtime-agent/start-runtime-agent.sh"
+    "start": "bash /Agent/llm-runtime/runtime-agent/start-runtime-agent.sh"
 }

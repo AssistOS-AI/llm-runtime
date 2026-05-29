@@ -89,11 +89,16 @@ JSON
             echo '{"started":false,"error":"model file missing; run prepare first"}'
             exit 1
         fi
+        {
+            echo "[llama-cpp-cpu] engine stdout/stderr are discarded by default to avoid persisting prompts or secrets."
+            echo "[llama-cpp-cpu] add a redacted diagnostic log path before collecting engine output."
+        } >"$log_file"
+        chmod 600 "$log_file" 2>/dev/null || true
         nohup "$LLAMA_SERVER_BIN" \
             --model "$MODEL_CACHE_DIR/$MODEL_FILE" \
             --port "$PORT" \
             --host 127.0.0.1 \
-            >"$log_file" 2>&1 &
+            >/dev/null 2>&1 &
         echo $! > "$pid_file"
         echo "{\"started\":true,\"instanceId\":\"$instance_id\",\"port\":$PORT}"
         ;;

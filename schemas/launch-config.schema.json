@@ -7,7 +7,7 @@
     "required": ["instanceId", "launcher"],
     "properties": {
         "instanceId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$" },
-        "launcher": { "type": "string", "pattern": "^[a-zA-Z0-9._-]+$" },
+        "launcher": { "type": "string", "pattern": "^[a-zA-Z0-9](?:[a-zA-Z0-9_-]|[.](?=[a-zA-Z0-9_-])){0,127}$" },
         "parameters": {
             "type": "object",
             "additionalProperties": false,

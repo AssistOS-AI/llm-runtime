@@ -3,7 +3,7 @@ import http from 'node:http';
 const CONTROL_HOST = process.env.PLOINKY_LLM_INTERNAL_HOST || '127.0.0.1';
 const CONTROL_PORT = Number(process.env.PLOINKY_LLM_CONTROL_PORT || process.env.PLOINKY_LLM_RUNTIME_PORT || 9002);
 const TOOL_NAME_RE = /^(runtime|modelProfiles|launchers|instance)\.[a-zA-Z][a-zA-Z0-9]*$/;
-const ID_RE = /^[a-zA-Z0-9._-]{1,128}$/;
+const ID_RE = /^[a-zA-Z0-9](?:[a-zA-Z0-9_-]|[.](?=[a-zA-Z0-9_-])){0,127}$/;
 
 function readStdinJson() {
     return new Promise((resolve, reject) => {

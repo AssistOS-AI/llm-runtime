@@ -1,5 +1,5 @@
-#!/bin/sh
-set -eu
+#!/usr/bin/env bash
+set -euo pipefail
 
 PUBLIC_PORT="${PLOINKY_LLM_PUBLIC_PORT:-9000}"
 MCP_PORT="${PLOINKY_LLM_MCP_PORT:-9001}"
@@ -52,4 +52,12 @@ mcp_pid="$!"
 node /Agent/llm-runtime/runtime-agent/runtime-proxy.mjs &
 proxy_pid="$!"
 
-wait "$proxy_pid"
+status=0
+if wait -n "$control_pid" "$mcp_pid" "$proxy_pid"; then
+    status=1
+else
+    status="$?"
+fi
+
+echo "[llm-runtime] one runtime service exited; stopping remaining services" >&2
+exit "$status"

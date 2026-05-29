@@ -1,5 +1,5 @@
 const PROFILE_ID_RE = /^[a-z][a-zA-Z0-9_-]{0,63}$/;
-const LAUNCHER_NAME_RE = /^[a-zA-Z0-9._-]+$/;
+const LAUNCHER_NAME_RE = /^[a-zA-Z0-9](?:[a-zA-Z0-9_-]|[.](?=[a-zA-Z0-9_-])){0,127}$/;
 const INSTANCE_ID_RE = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 const ACCELERATOR_FAMILIES = new Set(['cpu', 'nvidia-cuda', 'amd-rocm', 'vulkan', 'intel-openvino']);
 const PLATFORMS = new Set(['linux/amd64', 'linux/arm64']);

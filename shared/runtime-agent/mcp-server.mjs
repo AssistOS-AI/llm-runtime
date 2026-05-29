@@ -32,6 +32,7 @@ import { validateInstanceId, validateLauncherName } from './lib/schemas.mjs';
 
 const DEFAULT_PORT = Number(process.env.PLOINKY_LLM_RUNTIME_PORT || process.env.PLOINKY_LLM_CONTROL_PORT || 9000);
 const DEFAULT_ENGINE_PORT = Number(process.env.PLOINKY_LLM_ENGINE_PORT || 8080);
+const CONTROL_BIND_HOST = '127.0.0.1';
 const ENGINE_HOST = process.env.PLOINKY_LLM_ENGINE_HOST || '127.0.0.1';
 const AGENT_LAUNCHERS_DIR = process.env.PLOINKY_LLM_LAUNCHERS_DIR || '/code/launchers';
 const SHARED_LAUNCHERS_DIR = process.env.PLOINKY_LLM_SHARED_LAUNCHERS_DIR || '/opt/ploinky/launchers';
@@ -528,6 +529,7 @@ export {
     AGENT_MODELS_FILE,
     DEFAULT_ENGINE_PORT,
     DEFAULT_PORT,
+    CONTROL_BIND_HOST,
     ENGINE_HOST,
     SHARED_LAUNCHERS_DIR,
     createServer,
@@ -537,6 +539,6 @@ export {
 };
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-    createServer({ port: DEFAULT_PORT, host: '0.0.0.0' });
-    process.stdout.write(`[llm-runtime-control] listening on 0.0.0.0:${DEFAULT_PORT}\n`);
+    createServer({ port: DEFAULT_PORT, host: CONTROL_BIND_HOST });
+    process.stdout.write(`[llm-runtime-control] listening on ${CONTROL_BIND_HOST}:${DEFAULT_PORT}\n`);
 }

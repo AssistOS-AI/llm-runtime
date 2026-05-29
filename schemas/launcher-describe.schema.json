@@ -7,7 +7,7 @@
     "required": ["schemaVersion", "id", "engine", "supportedAccelerators"],
     "properties": {
         "schemaVersion": { "type": "integer", "const": 1 },
-        "id": { "type": "string", "pattern": "^[a-zA-Z0-9._-]+$" },
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9](?:[a-zA-Z0-9_-]|[.](?=[a-zA-Z0-9_-])){0,127}$" },
         "engine": { "type": "string", "minLength": 1, "maxLength": 64 },
         "modelRepo": { "type": "string", "maxLength": 256 },
         "modelFiles": { "type": "array", "items": { "type": "string", "maxLength": 256 } },

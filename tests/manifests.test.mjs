@@ -10,7 +10,7 @@ test('LLM runtime manifests use the shared startup wrapper and MCP readiness', (
     for (const agent of agents) {
         const manifest = JSON.parse(fs.readFileSync(path.join(root, agent, 'manifest.json'), 'utf8'));
         assert.equal(manifest.llmRuntime?.enabled, true, `${agent} must opt into LLM runtime handling`);
-        assert.equal(manifest.start, 'sh /Agent/llm-runtime/runtime-agent/start-runtime-agent.sh');
+        assert.equal(manifest.start, 'bash /Agent/llm-runtime/runtime-agent/start-runtime-agent.sh');
         assert.equal(manifest.readiness?.protocol, 'mcp');
         assert.ok(manifest.endpoints?.['agent-card'], `${agent} should declare endpoint metadata with agent-card key`);
     }

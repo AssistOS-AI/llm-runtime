@@ -68,7 +68,8 @@ test('runtime MCP server publishes /agent-card, /runtime/describe, and rejects b
     process.env.PLOINKY_LLM_AGENT_MODELS = path.join(repoRoot, 'base-local/agent-models.json');
     process.env.PLOINKY_LLM_AGENT_CARD = path.join(repoRoot, 'base-local/agent-card.json');
 
-    const { createServer } = await import(`${path.join(repoRoot, 'shared/runtime-agent/mcp-server.mjs')}?test=${Date.now()}`);
+    const { CONTROL_BIND_HOST, createServer } = await import(`${path.join(repoRoot, 'shared/runtime-agent/mcp-server.mjs')}?test=${Date.now()}`);
+    assert.equal(CONTROL_BIND_HOST, '127.0.0.1');
 
     const originalReader = process.env.PLOINKY_LLM_RUNTIME_DIR;
     // /runtime is read inside the container; outside, /runtime/describe and /health fall back to 503.

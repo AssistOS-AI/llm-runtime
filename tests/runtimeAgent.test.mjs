@@ -7,10 +7,11 @@ import path from 'node:path';
 import {
     LauncherDescribeError,
     ProfileValidationError,
+    validateLauncherName,
     validateAgentModelProfiles,
     validateLauncherDescribe,
 } from '../shared/runtime-agent/lib/schemas.mjs';
-import { redactEnv, redactString } from '../shared/runtime-agent/lib/redaction.mjs';
+import { redactEnv, redactString, shouldRedactEnvName } from '../shared/runtime-agent/lib/redaction.mjs';
 import {
     applyPriorityOverrides,
     loadProfiles,
@@ -75,10 +76,22 @@ test('validateLauncherDescribe rejects unsupported accelerator', () => {
 test('redactEnv replaces named secret values', () => {
     const out = redactEnv({
         HF_TOKEN: 'hf_realtoken123',
+        HUGGING_FACE_HUB_TOKEN: 'hf_realtoken456',
+        OPENAI_API_TOKEN: 'sk-abcdefghijklmnopqrstuvwxyz',
+        PLOINKY_MASTER_KEY: 'master-secret',
+        CUSTOM_SERVICE_TOKEN: 'service-token',
+        SERVICE_PRIVATE_KEY: 'private-key',
         SAFE_VAR: 'visible',
     });
     assert.equal(out.HF_TOKEN, '[REDACTED]');
+    assert.equal(out.HUGGING_FACE_HUB_TOKEN, '[REDACTED]');
+    assert.equal(out.OPENAI_API_TOKEN, '[REDACTED]');
+    assert.equal(out.PLOINKY_MASTER_KEY, '[REDACTED]');
+    assert.equal(out.CUSTOM_SERVICE_TOKEN, '[REDACTED]');
+    assert.equal(out.SERVICE_PRIVATE_KEY, '[REDACTED]');
     assert.equal(out.SAFE_VAR, 'visible');
+    assert.equal(shouldRedactEnvName('HUGGING_FACE_HUB_TOKEN'), true);
+    assert.equal(shouldRedactEnvName('SAFE_VAR'), false);
 });
 
 test('redactString replaces inline secret patterns', () => {
@@ -138,6 +151,16 @@ test('discoverLauncherScripts finds modelLauncher_*.sh scripts in a directory', 
     }
 });
 
+test('launcher names reject dot-only and traversal-like ids', () => {
+    assert.equal(validateLauncherName('fake-cpu'), true);
+    assert.equal(validateLauncherName('llama.cpp-cpu'), true);
+    assert.equal(validateLauncherName('.'), false);
+    assert.equal(validateLauncherName('..'), false);
+    assert.equal(validateLauncherName('a..b'), false);
+    assert.equal(validateLauncherName('a.'), false);
+    assert.equal(validateLauncherName('../secret'), false);
+});
+
 test('discoverAndDescribe validates the fake-cpu launcher and reports describe metadata', () => {
     const launcherDir = path.resolve(import.meta.dirname, '..', 'base-local', 'launchers');
     const found = discoverAndDescribe(launcherDir);
@@ -169,4 +192,20 @@ test('real llama.cpp launcher keeps model artifacts out of /runtime', () => {
     assert.match(script, /HF_HOME:-\/models\/hf-cache/);
     assert.match(script, /PLOINKY_DERIVED_DIR:-\/models\/derived/);
     assert.ok(!script.includes('/runtime/models'), 'model cache must not be stored under runtime state');
+    assert.ok(!script.includes('>"$log_file" 2>&1'), 'engine output must not persist raw stdout/stderr by default');
+    assert.match(script, />\/dev\/null 2>&1/, 'engine output must be discarded unless a redacted log path is added');
+});
+
+test('runtime start wrapper supervises every child service', () => {
+    const wrapperPath = path.resolve(
+        import.meta.dirname,
+        '..',
+        'shared',
+        'runtime-agent',
+        'start-runtime-agent.sh',
+    );
+    const script = fs.readFileSync(wrapperPath, 'utf8');
+    assert.match(script, /^#!\/usr\/bin\/env bash/);
+    assert.match(script, /wait -n "\$control_pid" "\$mcp_pid" "\$proxy_pid"/);
+    assert.ok(!script.includes('wait "$proxy_pid"'), 'wrapper must not wait only on the public proxy');
 });

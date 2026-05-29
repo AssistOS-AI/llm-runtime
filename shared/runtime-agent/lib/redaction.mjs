@@ -1,11 +1,21 @@
 const REDACTED_NAMES = new Set([
+    'ANTHROPIC_API_KEY',
+    'ANTHROPIC_AUTH_TOKEN',
+    'ANTHROPIC_TOKEN',
+    'API_KEY',
+    'AXIOLOGIC_API_KEY',
+    'GEMINI_API_KEY',
     'HF_TOKEN',
+    'HUGGING_FACE_HUB_TOKEN',
     'HUGGINGFACE_TOKEN',
     'HUGGINGFACEHUB_API_TOKEN',
     'OPENAI_API_KEY',
-    'ANTHROPIC_API_KEY',
-    'PLOINKY_MASTER_KEY',
+    'OPENAI_API_TOKEN',
+    'OPENAI_TOKEN',
+    'OPENROUTER_API_KEY',
     'PLOINKY_DERIVED_MASTER_KEY',
+    'PLOINKY_MASTER_KEY',
+    'SOUL_GATEWAY_API_KEY',
 ]);
 
 const SECRET_VALUE_PATTERNS = [
@@ -23,10 +33,23 @@ function redactValue(value) {
     return out;
 }
 
+function shouldRedactEnvName(name) {
+    if (typeof name !== 'string' || !name) return false;
+    const upper = name.toUpperCase();
+    return REDACTED_NAMES.has(upper)
+        || /(^|_)(SECRET|TOKEN|PASSWORD|PASS|CREDENTIAL|CREDENTIALS)($|_)/.test(upper)
+        || upper.includes('API_KEY')
+        || upper.includes('APIKEY')
+        || upper.includes('PRIVATE_KEY')
+        || upper.includes('MASTER_KEY')
+        || upper.includes('ENCRYPTION_KEY')
+        || upper.includes('JWT_SECRET');
+}
+
 function redactEnv(env) {
     const out = {};
     for (const [name, value] of Object.entries(env || {})) {
-        if (REDACTED_NAMES.has(name)) {
+        if (shouldRedactEnvName(name)) {
             out[name] = '[REDACTED]';
         } else {
             out[name] = redactValue(value);
@@ -44,4 +67,5 @@ export {
     redactEnv,
     redactString,
     redactValue,
+    shouldRedactEnvName,
 };
