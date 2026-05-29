@@ -31,7 +31,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Defaults; can be overridden by /runtime/launch-configs/<instance>.json.
-MODEL_REPO="${LLAMA_CPP_DEFAULT_REPO:-ggml-org/Qwen2.5-0.5B-Instruct-GGUF}"
+MODEL_REPO="${LLAMA_CPP_DEFAULT_REPO:-Qwen/Qwen2.5-0.5B-Instruct-GGUF}"
 MODEL_REVISION="${LLAMA_CPP_DEFAULT_REVISION:-main}"
 MODEL_FILE="${LLAMA_CPP_DEFAULT_FILE:-qwen2.5-0.5b-instruct-q4_k_m.gguf}"
 LLAMA_SERVER_BIN="${LLAMA_SERVER_BIN:-llama-server}"

@@ -10,6 +10,12 @@ import {
 } from './schemas.mjs';
 
 const DEFAULT_LAUNCHER_CALL_TIMEOUT_MS = 60_000;
+const DEFAULT_LAUNCHER_PREPARE_TIMEOUT_MS = 30 * 60_000;
+
+function positiveIntegerEnv(name, fallback) {
+    const value = Number.parseInt(process.env[name] || '', 10);
+    return Number.isFinite(value) && value > 0 ? value : fallback;
+}
 
 class InstanceError extends Error {
     constructor(message, code = 'INSTANCE_ERROR') {
@@ -118,7 +124,9 @@ function prepareInstance({ runtimeDir, launcher, config }) {
     const configPath = instanceConfigPath(runtimeDir, sanitized.instanceId);
     safeJsonWrite(configPath, sanitized);
     const logPath = instanceLogPath(runtimeDir, sanitized.instanceId);
-    const result = runLauncherCommand(launcher, ['prepare', '--config', configPath]);
+    const result = runLauncherCommand(launcher, ['prepare', '--config', configPath], {
+        timeoutMs: positiveIntegerEnv('PLOINKY_LAUNCHER_PREPARE_TIMEOUT_MS', DEFAULT_LAUNCHER_PREPARE_TIMEOUT_MS),
+    });
     appendLog(logPath, 'prepare', { stdout: result.stdout, stderr: result.stderr, status: result.status });
     if (!result.ok) {
         throw new InstanceError(`launcher prepare failed: ${result.stderr || result.error || `exit ${result.status}`}`, 'PREPARE_FAILED');
@@ -135,7 +143,11 @@ function startInstance({ runtimeDir, launcher, config }) {
     }
     const active = getActiveInstance(runtimeDir);
     if (active && active.launcher === config.launcher && active.instanceId === config.instanceId) {
-        return { ok: true, reused: true, instanceId: config.instanceId, launcher: config.launcher };
+        const probe = statusInstance({ runtimeDir, launcher, instanceId: config.instanceId });
+        if (probe.ok && probe.status?.status === 'running') {
+            return { ok: true, reused: true, instanceId: config.instanceId, launcher: config.launcher };
+        }
+        clearActiveInstance(runtimeDir);
     }
     if (active) {
         stopInstance({ runtimeDir, launcher: { id: active.launcher, scriptPath: active.scriptPath }, instanceId: active.instanceId });
@@ -230,6 +242,7 @@ function readRuntimeEnvSummary() {
 
 export {
     DEFAULT_LAUNCHER_CALL_TIMEOUT_MS,
+    DEFAULT_LAUNCHER_PREPARE_TIMEOUT_MS,
     InstanceError,
     activePointerPath,
     appendLog,
