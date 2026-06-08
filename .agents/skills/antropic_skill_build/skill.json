@@ -1,0 +1,22 @@
+{
+  "title": "Antropic Skill Build",
+  "family": "anthropic",
+  "summary": "Defines the portable self-contained skill baseline used for standardized Anthropic-style skills inside this repository.",
+  "aliases": [
+    "antropic_skill_build",
+    "anthropic-skill"
+  ],
+  "dependsOn": [
+    "gamp_specs",
+    "achilles_specs"
+  ],
+  "outputs": [
+    "SKILL.md",
+    "skill-local assets"
+  ],
+  "entrypoints": [
+    "SKILL.md",
+    "DS.md"
+  ],
+  "selfContained": true
+}
