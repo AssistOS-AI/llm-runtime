@@ -64,14 +64,24 @@ JSON
         ;;
     prepare)
         mkdir -p "$HF_HOME" "$MODEL_CACHE_DIR" "$DERIVED_DIR"
-        if ! command -v hf >/dev/null 2>&1; then
-            echo '{"prepared":false,"error":"hf CLI not installed in this image"}'
-            exit 1
+        # Offline seed: the runtime bind-mounts a host volume over /models, which
+        # shadows any model baked into the image under /models. Images therefore
+        # bake the GGUF into a seed dir OUTSIDE /models; copy it into the cache so
+        # no network is needed when the model ships in the image.
+        seed_dir="${PLOINKY_MODEL_SEED_DIR:-/opt/ploinky/model-seed}/$safe_repo/$safe_revision"
+        if [[ ! -f "$MODEL_CACHE_DIR/$MODEL_FILE" && -f "$seed_dir/$MODEL_FILE" ]]; then
+            cp -f "$seed_dir/$MODEL_FILE" "$MODEL_CACHE_DIR/$MODEL_FILE"
         fi
-        # The hf CLI reads HF_TOKEN from the environment. Do not echo it.
-        hf download "$MODEL_REPO" "$MODEL_FILE" --revision "$MODEL_REVISION" --local-dir "$MODEL_CACHE_DIR" >/dev/null 2>&1 || true
         if [[ ! -f "$MODEL_CACHE_DIR/$MODEL_FILE" ]]; then
-            echo '{"prepared":false,"error":"model file not present after download attempt"}'
+            if ! command -v hf >/dev/null 2>&1; then
+                echo '{"prepared":false,"error":"hf CLI not installed in this image"}'
+                exit 1
+            fi
+            # The hf CLI reads HF_TOKEN from the environment. Do not echo it.
+            hf download "$MODEL_REPO" "$MODEL_FILE" --revision "$MODEL_REVISION" --local-dir "$MODEL_CACHE_DIR" >/dev/null 2>&1 || true
+        fi
+        if [[ ! -f "$MODEL_CACHE_DIR/$MODEL_FILE" ]]; then
+            echo '{"prepared":false,"error":"model file not present after seed/download attempt"}'
             exit 1
         fi
         echo '{"prepared":true}'
@@ -84,6 +94,13 @@ JSON
         if [[ ! -x "$(command -v "$LLAMA_SERVER_BIN")" ]]; then
             echo '{"started":false,"error":"llama-server binary not found"}'
             exit 1
+        fi
+        # Offline seed: the runtime invokes `start` without a preceding `prepare`,
+        # so seed the model from the image-baked seed dir (outside the shadowed
+        # /models mount) into the cache if it is not already there.
+        seed_dir="${PLOINKY_MODEL_SEED_DIR:-/opt/ploinky/model-seed}/$safe_repo/$safe_revision"
+        if [[ ! -f "$MODEL_CACHE_DIR/$MODEL_FILE" && -f "$seed_dir/$MODEL_FILE" ]]; then
+            cp -f "$seed_dir/$MODEL_FILE" "$MODEL_CACHE_DIR/$MODEL_FILE"
         fi
         if [[ ! -f "$MODEL_CACHE_DIR/$MODEL_FILE" ]]; then
             echo '{"started":false,"error":"model file missing; run prepare first"}'
