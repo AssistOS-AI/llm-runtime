@@ -24,6 +24,9 @@
         },
         "agentCard": {
             "tags": ["llm", "local", "chat"]
+        },
+        "chatCompletions": {
+            "stream": true
         }
     },
     "start": "bash /Agent/llm-runtime/runtime-agent/start-runtime-agent.sh"

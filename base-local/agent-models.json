@@ -3,9 +3,10 @@
     "profiles": [
         {
             "id": "primary",
-            "description": "Primary chat profile. Tries GPU launchers first, falls back to CPU.",
+            "description": "Primary chat profile. Real CPU llama.cpp launcher; fake launcher kept last for tests.",
             "candidates": [
-                { "launcher": "fake-cpu", "priority": 100, "requiredAccelerators": ["cpu"] }
+                { "launcher": "llama-cpp-cpu", "priority": 100, "requiredAccelerators": ["cpu"] },
+                { "launcher": "fake-cpu", "priority": 10, "requiredAccelerators": ["cpu"] }
             ]
         }
     ]
