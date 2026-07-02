@@ -5,14 +5,14 @@
             "id": "primary",
             "description": "Default planning profile.",
             "candidates": [
-                { "launcher": "fake-cpu", "priority": 100, "requiredAccelerators": ["cpu"] }
+                { "launcher": "llama-cpp-cpu", "priority": 100, "requiredAccelerators": ["cpu"] }
             ]
         },
         {
             "id": "long-context",
             "description": "Long-context planning profile.",
             "candidates": [
-                { "launcher": "fake-cpu", "priority": 100, "requiredAccelerators": ["cpu"] }
+                { "launcher": "llama-cpp-cpu", "priority": 100, "requiredAccelerators": ["cpu"] }
             ]
         }
     ]

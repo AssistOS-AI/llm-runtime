@@ -9,7 +9,6 @@
         "schemaVersion": { "type": "integer", "const": 1 },
         "profiles": {
             "type": "array",
-            "minItems": 1,
             "items": {
                 "type": "object",
                 "additionalProperties": false,

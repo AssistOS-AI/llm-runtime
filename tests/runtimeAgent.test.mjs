@@ -22,6 +22,31 @@ import {
     discoverLauncherScripts,
 } from '../shared/runtime-agent/lib/launcherRegistry.mjs';
 
+function validLauncherDescribe(overrides = {}) {
+    return {
+        schemaVersion: 1,
+        id: 'llamacpp-cpu',
+        modelId: 'tiny-test',
+        engine: 'llamacpp',
+        modelFormat: 'gguf',
+        hfRepoId: 'test/tiny',
+        hfRevision: 'main',
+        modelFiles: ['tiny.gguf'],
+        supportedAccelerators: ['cpu'],
+        supportedPlatforms: ['linux/amd64'],
+        configurableParameters: {
+            contextTokens: { type: 'integer', minimum: 1 },
+        },
+        profiles: {
+            primary: { contextTokens: 1024 },
+        },
+        resourceEstimates: {
+            cpu: { memoryMiB: 512 },
+        },
+        ...overrides,
+    };
+}
+
 test('validateAgentModelProfiles accepts a valid document', () => {
     const doc = {
         schemaVersion: 1,
@@ -29,12 +54,21 @@ test('validateAgentModelProfiles accepts a valid document', () => {
             {
                 id: 'primary',
                 candidates: [
-                    { launcher: 'fake-cpu', priority: 100, requiredAccelerators: ['cpu'] },
+                    { launcher: 'test-cpu', priority: 100, requiredAccelerators: ['cpu'] },
                 ],
             },
         ],
     };
     assert.equal(validateAgentModelProfiles(doc).profiles.length, 1);
+});
+
+test('validateAgentModelProfiles accepts an empty package model catalog', () => {
+    const doc = {
+        schemaVersion: 1,
+        profiles: [],
+    };
+    const parsed = validateAgentModelProfiles(doc);
+    assert.deepEqual(parsed.profiles, []);
 });
 
 test('validateAgentModelProfiles rejects unknown launcher reference', () => {
@@ -45,7 +79,7 @@ test('validateAgentModelProfiles rejects unknown launcher reference', () => {
         ],
     };
     assert.throws(
-        () => validateAgentModelProfiles(doc, new Set(['fake-cpu'])),
+        () => validateAgentModelProfiles(doc, new Set(['test-cpu'])),
         (err) => err instanceof ProfileValidationError && /unknown launcher/.test(err.message),
     );
 });
@@ -54,22 +88,37 @@ test('validateAgentModelProfiles rejects duplicate profile ids', () => {
     const doc = {
         schemaVersion: 1,
         profiles: [
-            { id: 'p1', candidates: [{ launcher: 'fake-cpu' }] },
-            { id: 'p1', candidates: [{ launcher: 'fake-cpu' }] },
+            { id: 'p1', candidates: [{ launcher: 'test-cpu' }] },
+            { id: 'p1', candidates: [{ launcher: 'test-cpu' }] },
         ],
     };
     assert.throws(() => validateAgentModelProfiles(doc), /duplicate profile id/);
 });
 
+test('validateAgentModelProfiles rejects non-empty profiles without candidates', () => {
+    const doc = {
+        schemaVersion: 1,
+        profiles: [
+            { id: 'primary', candidates: [] },
+        ],
+    };
+    assert.throws(() => validateAgentModelProfiles(doc), /profile 'primary'\.candidates: requires at least 1 item/);
+});
+
 test('validateLauncherDescribe rejects unsupported accelerator', () => {
     assert.throws(
-        () => validateLauncherDescribe({
-            schemaVersion: 1,
-            id: 'fake',
-            engine: 'fake',
-            supportedAccelerators: ['quantum'],
-        }),
+        () => validateLauncherDescribe(validLauncherDescribe({ supportedAccelerators: ['quantum'] })),
         (err) => err instanceof LauncherDescribeError && /unsupported/.test(err.message),
+    );
+});
+
+test('validateLauncherDescribe accepts only supported runtime engines', () => {
+    for (const engine of ['llamacpp', 'vllm', 'sglang', 'trtllm', 'openvino']) {
+        assert.equal(validateLauncherDescribe(validLauncherDescribe({ engine })).engine, engine);
+    }
+    assert.throws(
+        () => validateLauncherDescribe(validLauncherDescribe({ engine: 'llama.cpp' })),
+        (err) => err instanceof LauncherDescribeError && /describe.engine/.test(err.message),
     );
 });
 
@@ -152,7 +201,7 @@ test('discoverLauncherScripts finds modelLauncher_*.sh scripts in a directory', 
 });
 
 test('launcher names reject dot-only and traversal-like ids', () => {
-    assert.equal(validateLauncherName('fake-cpu'), true);
+    assert.equal(validateLauncherName('test-cpu'), true);
     assert.equal(validateLauncherName('llama.cpp-cpu'), true);
     assert.equal(validateLauncherName('.'), false);
     assert.equal(validateLauncherName('..'), false);
@@ -161,51 +210,44 @@ test('launcher names reject dot-only and traversal-like ids', () => {
     assert.equal(validateLauncherName('../secret'), false);
 });
 
-test('discoverAndDescribe validates the fake-cpu launcher and reports describe metadata', () => {
-    const launcherDir = path.resolve(import.meta.dirname, '..', 'base-local', 'launchers');
-    const found = discoverAndDescribe(launcherDir);
-    const fake = found.find((l) => l.id === 'fake-cpu');
-    assert.ok(fake, 'fake-cpu launcher must be discovered');
-    assert.ok(fake.ok, `fake-cpu describe must succeed: ${fake.error}`);
-    assert.equal(fake.describe.engine, 'fake');
-    assert.deepEqual(fake.describe.supportedAccelerators, ['cpu']);
+test('discoverAndDescribe validates a clean launcher describe contract', () => {
+    const launcherDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ploinky-describe-'));
+    try {
+        const scriptPath = path.join(launcherDir, 'modelLauncher_llamacpp-cpu.sh');
+        fs.writeFileSync(scriptPath, `#!/usr/bin/env bash
+set -euo pipefail
+if [ "\${1:-}" = "describe" ]; then
+  cat <<'JSON'
+${JSON.stringify(validLauncherDescribe())}
+JSON
+  exit 0
+fi
+echo '{}'
+`);
+        fs.chmodSync(scriptPath, 0o755);
 
-    // The real CPU llama.cpp launcher is also present; its describe block
-    // is allowed to succeed (when GGUF/llama-server are absent, only start
-    // would fail — describe is independent).
-    const llama = found.find((l) => l.id === 'llama-cpp-cpu');
-    if (llama && llama.ok) {
-        assert.equal(llama.describe.engine, 'llama.cpp');
+        const found = discoverAndDescribe(launcherDir);
+        const launcher = found.find((l) => l.id === 'llamacpp-cpu');
+        assert.ok(launcher, 'llamacpp-cpu launcher must be discovered');
+        assert.ok(launcher.ok, `llamacpp-cpu describe must succeed: ${launcher.error}`);
+        assert.equal(launcher.describe.engine, 'llamacpp');
+        assert.equal(launcher.describe.modelFormat, 'gguf');
+    } finally {
+        fs.rmSync(launcherDir, { recursive: true, force: true });
     }
 });
 
-test('real llama.cpp launcher keeps model artifacts out of /runtime', () => {
-    const launcherPath = path.resolve(
-        import.meta.dirname,
-        '..',
-        'base-local',
-        'launchers',
-        'modelLauncher_llama-cpp-cpu.sh',
-    );
-    const script = fs.readFileSync(launcherPath, 'utf8');
-    assert.match(script, /PLOINKY_MODELS_DIR:-\/models\/artifacts/);
-    assert.match(script, /HF_HOME:-\/models\/hf-cache/);
-    assert.match(script, /PLOINKY_DERIVED_DIR:-\/models\/derived/);
-    assert.ok(!script.includes('/runtime/models'), 'model cache must not be stored under runtime state');
-    assert.ok(!script.includes('>"$log_file" 2>&1'), 'engine output must not persist raw stdout/stderr by default');
-    assert.match(script, />\/dev\/null 2>&1/, 'engine output must be discarded unless a redacted log path is added');
-});
-
-test('runtime start wrapper supervises every child service', () => {
-    const wrapperPath = path.resolve(
+test('runtime MCP service is the single active runtime entrypoint', () => {
+    const serverPath = path.resolve(
         import.meta.dirname,
         '..',
         'shared',
         'runtime-agent',
-        'start-runtime-agent.sh',
+        'mcp-server.mjs',
     );
-    const script = fs.readFileSync(wrapperPath, 'utf8');
-    assert.match(script, /^#!\/usr\/bin\/env bash/);
-    assert.match(script, /wait -n "\$control_pid" "\$mcp_pid" "\$proxy_pid"/);
-    assert.ok(!script.includes('wait "$proxy_pid"'), 'wrapper must not wait only on the public proxy');
+    const source = fs.readFileSync(serverPath, 'utf8');
+    assert.match(source, /createServer/);
+    assert.ok(!source.includes('runtime-proxy'));
+    assert.ok(!source.includes('runtime-tool'));
+    assert.ok(!source.includes('start-runtime-agent'));
 });

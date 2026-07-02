@@ -4,13 +4,34 @@
     "title": "Launcher describe output",
     "type": "object",
     "additionalProperties": false,
-    "required": ["schemaVersion", "id", "engine", "supportedAccelerators"],
+    "required": [
+        "schemaVersion",
+        "id",
+        "modelId",
+        "engine",
+        "modelFormat",
+        "hfRepoId",
+        "hfRevision",
+        "modelFiles",
+        "supportedAccelerators",
+        "supportedPlatforms",
+        "configurableParameters",
+        "profiles",
+        "resourceEstimates"
+    ],
     "properties": {
         "schemaVersion": { "type": "integer", "const": 1 },
         "id": { "type": "string", "pattern": "^[a-zA-Z0-9](?:[a-zA-Z0-9_-]|[.](?=[a-zA-Z0-9_-])){0,127}$" },
-        "engine": { "type": "string", "minLength": 1, "maxLength": 64 },
-        "modelRepo": { "type": "string", "maxLength": 256 },
-        "modelFiles": { "type": "array", "items": { "type": "string", "maxLength": 256 } },
+        "modelId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "engine": { "enum": ["llamacpp", "vllm", "sglang", "trtllm", "openvino"] },
+        "modelFormat": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "hfRepoId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "hfRevision": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "modelFiles": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+        },
         "supportedAccelerators": {
             "type": "array",
             "minItems": 1,
@@ -18,16 +39,20 @@
         },
         "supportedPlatforms": {
             "type": "array",
+            "minItems": 1,
             "items": { "enum": ["linux/amd64", "linux/arm64"] }
         },
-        "capabilities": {
+        "configurableParameters": {
             "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "chat": { "type": "boolean" },
-                "embeddings": { "type": "boolean" },
-                "rerank": { "type": "boolean" }
-            }
+            "additionalProperties": true
+        },
+        "profiles": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "resourceEstimates": {
+            "type": "object",
+            "additionalProperties": true
         }
     }
 }

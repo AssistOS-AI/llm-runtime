@@ -2,16 +2,12 @@
     "id": "language-detection",
     "description": "Local language-detection MCP agent. Embedded classifier; no engine port required.",
     "container": "${PLOINKY_LANGUAGE_DETECTION_IMAGE}",
-    "workdir": "/code",
     "llmRuntime": {
         "enabled": true
     },
-    "env": [
-        { "name": "HF_TOKEN", "required": false }
-    ],
     "profiles": {
         "default": {
-            "ports": ["127.0.0.1:0:9000"]
+            "openPorts": ["127.0.0.1:0:9000"]
         }
     },
     "readiness": {
@@ -24,6 +20,5 @@
         "agentCard": {
             "tags": ["llm", "local", "classifier"]
         }
-    },
-    "start": "bash /Agent/llm-runtime/runtime-agent/start-runtime-agent.sh"
+    }
 }

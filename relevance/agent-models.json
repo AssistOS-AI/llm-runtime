@@ -1,12 +1,4 @@
 {
     "schemaVersion": 1,
-    "profiles": [
-        {
-            "id": "primary",
-            "description": "Default rerank profile.",
-            "candidates": [
-                { "launcher": "fake-cpu", "priority": 100, "requiredAccelerators": ["cpu"] }
-            ]
-        }
-    ]
+    "profiles": []
 }

@@ -1,3 +1,5 @@
+import { VALID_LAUNCHER_ENGINES } from './runtimeContract.mjs';
+
 const PROFILE_ID_RE = /^[a-z][a-zA-Z0-9_-]{0,63}$/;
 const LAUNCHER_NAME_RE = /^[a-zA-Z0-9](?:[a-zA-Z0-9_-]|[.](?=[a-zA-Z0-9_-])){0,127}$/;
 const INSTANCE_ID_RE = /^[a-z0-9][a-z0-9_-]{0,63}$/;
@@ -43,7 +45,7 @@ function validateAgentModelProfiles(doc, knownLauncherIds = null) {
     ensureObject(doc, 'agent-models.json');
     rejectUnknownKeys(doc, new Set(['schemaVersion', 'profiles']), 'agent-models.json');
     if (doc.schemaVersion !== 1) throw new ProfileValidationError('agent-models.json.schemaVersion must be 1');
-    ensureArray(doc.profiles, 'agent-models.json.profiles', 1);
+    ensureArray(doc.profiles, 'agent-models.json.profiles');
 
     const seenIds = new Set();
     for (const profile of doc.profiles) {
@@ -91,25 +93,58 @@ function validateLauncherDescribe(doc) {
         throw new LauncherDescribeError('describe output: expected JSON object');
     }
     const allowed = new Set([
-        'schemaVersion', 'id', 'engine', 'modelRepo', 'modelFiles',
-        'supportedAccelerators', 'supportedPlatforms', 'capabilities',
+        'schemaVersion',
+        'id',
+        'modelId',
+        'engine',
+        'modelFormat',
+        'hfRepoId',
+        'hfRevision',
+        'modelFiles',
+        'supportedAccelerators',
+        'supportedPlatforms',
+        'configurableParameters',
+        'profiles',
+        'resourceEstimates',
     ]);
     for (const key of Object.keys(doc)) {
         if (!allowed.has(key)) throw new LauncherDescribeError(`describe output: unknown field '${key}'`);
     }
     if (doc.schemaVersion !== 1) throw new LauncherDescribeError('describe.schemaVersion must be 1');
     if (!LAUNCHER_NAME_RE.test(String(doc.id || ''))) throw new LauncherDescribeError('describe.id invalid');
-    if (typeof doc.engine !== 'string' || !doc.engine.trim()) throw new LauncherDescribeError('describe.engine missing');
+    for (const field of ['modelId', 'modelFormat', 'hfRepoId', 'hfRevision']) {
+        if (typeof doc[field] !== 'string' || !doc[field].trim()) {
+            throw new LauncherDescribeError(`describe.${field} missing`);
+        }
+    }
+    if (!VALID_LAUNCHER_ENGINES.includes(doc.engine)) {
+        throw new LauncherDescribeError(`describe.engine must be one of ${VALID_LAUNCHER_ENGINES.join(', ')}`);
+    }
+    if (!Array.isArray(doc.modelFiles) || doc.modelFiles.length === 0) {
+        throw new LauncherDescribeError('describe.modelFiles must list at least one file');
+    }
+    for (const modelFile of doc.modelFiles) {
+        if (typeof modelFile !== 'string' || !modelFile.trim()) {
+            throw new LauncherDescribeError('describe.modelFiles entries must be non-empty strings');
+        }
+    }
     if (!Array.isArray(doc.supportedAccelerators) || doc.supportedAccelerators.length === 0) {
         throw new LauncherDescribeError('describe.supportedAccelerators must list at least one family');
     }
     for (const acc of doc.supportedAccelerators) {
         if (!ACCELERATOR_FAMILIES.has(acc)) throw new LauncherDescribeError(`describe.supportedAccelerators: '${acc}' unsupported`);
     }
-    if (doc.supportedPlatforms !== undefined) {
-        if (!Array.isArray(doc.supportedPlatforms)) throw new LauncherDescribeError('describe.supportedPlatforms must be array');
-        for (const plat of doc.supportedPlatforms) {
-            if (!PLATFORMS.has(plat)) throw new LauncherDescribeError(`describe.supportedPlatforms: '${plat}' unsupported`);
+    if (!Array.isArray(doc.supportedPlatforms) || doc.supportedPlatforms.length === 0) {
+        throw new LauncherDescribeError('describe.supportedPlatforms must list at least one platform');
+    }
+    for (const plat of doc.supportedPlatforms) {
+        if (!PLATFORMS.has(plat)) {
+            throw new LauncherDescribeError(`describe.supportedPlatforms: '${plat}' unsupported`);
+        }
+    }
+    for (const field of ['configurableParameters', 'profiles', 'resourceEstimates']) {
+        if (!doc[field] || typeof doc[field] !== 'object' || Array.isArray(doc[field])) {
+            throw new LauncherDescribeError(`describe.${field} must be object`);
         }
     }
     return doc;

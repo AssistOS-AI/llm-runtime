@@ -1,22 +1,39 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "https://ploinky.local/llm-runtime/launch-config.schema.json",
-    "title": "Launch configuration (input to launcher prepare/start)",
+    "title": "Runtime launch startup configuration",
     "type": "object",
     "additionalProperties": false,
-    "required": ["instanceId", "launcher"],
+    "required": ["launcherId", "instanceId"],
     "properties": {
+        "launcherId": { "type": "string", "pattern": "^[a-zA-Z0-9](?:[a-zA-Z0-9_-]|[.](?=[a-zA-Z0-9_-])){0,127}$" },
         "instanceId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$" },
-        "launcher": { "type": "string", "pattern": "^[a-zA-Z0-9](?:[a-zA-Z0-9_-]|[.](?=[a-zA-Z0-9_-])){0,127}$" },
-        "parameters": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "temperature": { "type": "number", "minimum": 0, "maximum": 2 },
-                "topP": { "type": "number", "minimum": 0, "maximum": 1 },
-                "maxTokens": { "type": "integer", "minimum": 1, "maximum": 1048576 },
-                "contextLength": { "type": "integer", "minimum": 1, "maximum": 1048576 }
-            }
-        }
+        "profile": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9_-]{0,63}$" },
+        "contextTokens": { "type": "integer", "minimum": 1 },
+        "concurrency": { "type": "integer", "minimum": 1 },
+        "batchTokens": { "type": "integer", "minimum": 1 },
+        "prefillChunkTokens": { "type": "integer", "minimum": 1 },
+        "acceleratorMemoryFraction": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "acceleratorReserveMiB": { "type": "integer", "minimum": 1 },
+        "kvCachePrecision": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "gpuLayers": { "type": "integer", "minimum": 0 },
+        "tensorParallelSize": { "type": "integer", "minimum": 1 },
+        "pipelineParallelSize": { "type": "integer", "minimum": 1 },
+        "deviceIds": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1, "pattern": "\\S" },
+            "uniqueItems": true
+        },
+        "splitMode": { "enum": ["none", "layer", "row"] },
+        "tensorSplit": {
+            "type": "array",
+            "items": { "type": "number", "exclusiveMinimum": 0 },
+            "minItems": 1
+        },
+        "mainGpu": { "type": "integer", "minimum": 0 },
+        "cpuThreads": { "type": "integer", "minimum": 1 },
+        "cpuOffloadGiB": { "type": "number", "minimum": 0 },
+        "flashAttention": { "enum": ["on", "off", "auto"] },
+        "enableMetrics": { "type": "boolean" }
     }
 }

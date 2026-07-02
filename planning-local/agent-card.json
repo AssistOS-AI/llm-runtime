@@ -2,5 +2,5 @@
     "id": "planning-local",
     "tags": ["llm", "local", "planning"],
     "summary": "Local LLM agent optimized for planning, spec-style decomposition, and multi-step structured outputs.",
-    "usage": "Call /v1/chat/completions/<agent> via the router. Pass a 'profile' field to request a non-default planning profile."
+    "usage": "Use the runtime launcher tools to prepare and start the local planning model; inference is exposed on the Ploinky-published engine port."
 }
